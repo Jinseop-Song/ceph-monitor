@@ -12,7 +12,7 @@ class SlackNotifierBase(BaseNotifier):
 
             # Top Issues 가공 (빈 줄 제거 및 요약)
             detail_lines = [line.strip() for line in detail.split('\n') if line.strip()]
-            short_detail = "\n".join([f"• {line}" for line in detail_lines[:3]])
+            short_detail = "\n".join([f"• {line}" for line in detail_lines[:4]])
             has_more = len(detail_lines) > 3
 
             # 깨지지 않는 바 그래프
