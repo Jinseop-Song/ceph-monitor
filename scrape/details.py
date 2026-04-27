@@ -50,6 +50,18 @@ def get_cluster_capacity(active_mgr_ip, token_headers):
         return total_avail_gb, total_gb, total_used_raw_gb
     else:
         return None, None, None
+    
+def get_osd_data(active_mgr_ip, token_headers):
+    osd_url = f"https://{active_mgr_ip}:8443/api/osd"
+
+    osd_response = requests.get(osd_url, headers=token_headers, verify=False)
+
+    if osd_response.status_code == 200:
+        osd_data = osd_response.json()
+
+        
+    
+
 
 # OSD 상태를 조회하는 함수
 def get_osd_status(active_mgr_ip, token_headers):
