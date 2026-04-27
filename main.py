@@ -84,7 +84,7 @@ def main():
     schedule.every(config.refresh_interval).seconds.do(monitor.run_check)
     
     # 매일 아침 09:00에 데일리 리포트 실행
-    schedule.every().day.at("09:00").do(monitor.run_daily_report)
+    # schedule.every().day.at("09:00").do(monitor.run_daily_report)
 
     logger.info("서비스가 정상적으로 시작되었습니다.")
     
