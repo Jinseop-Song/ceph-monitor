@@ -75,19 +75,19 @@ class CephMonitor:
             # 헬스 체크 과정에서 발생하는 예상치 못한 모든 예외 기록
             logger.exception(f"헬스 체크 루프 중 예외 발생: {e}")
 
-    def run_daily_report(self):
-        """매일 정해진 시간에 클러스터 상태 요약 전송"""
-        logger.info("데일리 리포트 생성 시작")
+    # def run_daily_report(self):
+    #     """매일 정해진 시간에 클러스터 상태 요약 전송"""
+    #     logger.info("데일리 리포트 생성 시작")
         
-        if self.api.ensure_token():
-            try:
-                headers = self.api.get_headers()
-                # 인자 매칭 수정 (active_mgr_ip, token_headers)
-                more_info = scrape.details.main(
-                    active_mgr_ip=self.state.active_ip, 
-                    token_headers=headers
-                )
-                self.alert.send_daily_status(self.state.last_severity, more_info)
-                logger.info("데일리 리포트 전송 완료")
-            except Exception as e:
-                logger.error(f"데일리 리포트 생성 실패: {e}")
+    #     if self.api.ensure_token():
+    #         try:
+    #             headers = self.api.get_headers()
+    #             # 인자 매칭 수정 (active_mgr_ip, token_headers)
+    #             more_info = scrape.details.main(
+    #                 active_mgr_ip=self.state.active_ip, 
+    #                 token_headers=headers
+    #             )
+    #             self.alert.send_daily_status(self.state.last_severity, more_info)
+    #             logger.info("데일리 리포트 전송 완료")
+    #         except Exception as e:
+    #             logger.error(f"데일리 리포트 생성 실패: {e}")
