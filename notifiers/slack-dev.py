@@ -89,8 +89,13 @@ class SlackWebhookNotifier(SlackNotifierBase):
 
         if webhook_request.status_code == 200 and more_info:
             # 헬스 로그 및 OSD DF 원본 데이터 추출
-            health_log = more_info.get("health_detail_raw", "상세 헬스 로그 데이터가 없습니다.")
-            osd_df_log = more_info.get("osd_df_raw", "상세 OSD DF 데이터가 없습니다.")
+            # health_log = more_info.get("health_detail_raw", "상세 헬스 로그 데이터가 없습니다.")
+            osd_df = more_info.get("osd_df")
+            # DataFrame이 존재하는지 확인하고, 있다면 문자열 표로 변환
+            if osd_df is not None and not osd_df.empty:
+                osd_df_log = osd_df.to_string(index=False)
+            else:
+                osd_df_log = "데이터가 없거나 빈 상태입니다."
 
             # --- 2-1. Health Detail 블록킷 전송 ---
             health_payload = {
@@ -103,10 +108,10 @@ class SlackWebhookNotifier(SlackNotifierBase):
                         "text": {"type": "plain_text", "text": "Ceph Health Details", "emoji": True}
                     },
                     {"type": "divider"},
-                    {
-                        "type": "section",
-                        "text": {"type": "mrkdwn", "text": f"```\n{health_log}\n```"}
-                    },
+                    # {
+                    #     "type": "section",
+                    #     "text": {"type": "mrkdwn", "text": f"```\n{health_log}\n```"}
+                    # },
                     {"type": "divider"},
                     {
                         "type": "section",

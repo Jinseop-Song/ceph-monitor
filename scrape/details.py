@@ -2,19 +2,45 @@ import time
 import json
 import requests
 import subprocess
-import re
+import pandas as pd
 from datetime import datetime
 
-# 터미널 명령어를 실행하고 결과를 텍스트로 반환하는 함수
-def run_cli_command(cmd_list):
+def get_osd_df(active_mgr_ip, token_heders):
+    osd_df_url = f"https://{active_mgr_ip}:8443/api/osd"
     try:
-        # shell=False가 보안상 좋으므로 리스트 형태로 전달
-        result = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT, encoding='utf-8')
-        return result
-    except subprocess.CalledProcessError as e:
-        return f"CLI Error: {e.output}"
+        osd_df_response = requests.get(osd_df_url, headers=token_heders, verify=False, timeout=5)
+        if osd_df_response.status_code == 200:
+            osd_df_raw_data = osd_df_response.json()
+        refined_data = []
+        for osd in osd_df_raw_data:
+            stats = osd.get('osd_stats', {})
+            kb = stats.get('kb', 0)
+            kb_used = stats.get('kb_used', 0)
+            
+            refined_data.append({
+                'id': osd.get('id'),
+                'status': osd.get('state', ['unknown', 'unknown'])[1],
+                'crush_weight': osd.get('tree', {}).get('crush_weight', 0.0),
+                'percent_use': (kb_used / kb * 100) if kb > 0 else 0.0
+            })
+            
+            # 리스트를 데이터프레임으로 변환하여 반환
+            return pd.DataFrame(refined_data)
     except Exception as e:
-        return f"Unexpected CLI Error: {str(e)}"
+        print(f"OSD API Error: {e}")
+    
+    # 에러 발생 시 빈 데이터프레임 반환
+    return pd.DataFrame()
+
+def bytes_to_gigabytes(bytes_value):
+    return bytes_value / (1024 ** 3)
+# def get_health_full(active_mgr_ip, token_heders):
+#     health_full_url = f"https://{active_mgr_ip}:8443/api/health/full"
+#     try:
+#         health_full_response = requests.get(health_full_url, headers=token_heders, verify=False, timeout=5)
+#         if health_full_response.status_code == 200:
+#             health_full_data = health_full_response.json()
+        
 
 # 바이트를 기가바이트로 변환하는 함수
 def bytes_to_gigabytes(bytes_value):
@@ -72,11 +98,7 @@ def main(active_mgr_ip, token_headers):
     pg_info_str = get_pg_status(active_mgr_ip, token_headers)
     total_avail_gb, total_gb, total_used_raw_gb = get_cluster_capacity(active_mgr_ip, token_headers)
     osd_in_count, osd_up_count = get_osd_status(active_mgr_ip, token_headers)
-
-    # 2. CLI 기반 원본 텍스트 수집 (스레드 상세 로그용)
-    # 터미널에서 치던 그 맛 그대로 긁어옵니다.
-    health_detail_raw = run_cli_command(["ceph", "health", "detail"])
-    osd_df_raw = run_cli_command(["ceph", "osd", "df", "tree"]) # df tree로 더 자세하게!
+    osd_df = get_osd_df(active_mgr_ip, token_headers)
 
     # 3. 데이터 패키징
     return {
@@ -86,10 +108,9 @@ def main(active_mgr_ip, token_headers):
         "total_used_raw_gb": total_used_raw_gb or 0,
         "osd_in_count": osd_in_count or 0,
         "osd_up_count": osd_up_count or 0,
-        # [추가] 터미널 커맨드 데이터
-        "health_detail_raw": health_detail_raw,
-        "osd_df_raw": osd_df_raw
-    }
+        "osd_df": osd_df,
+        # "health_detail_raw": health_detail_raw
+        }
 
 if __name__ == "__main__":
     # 테스트용 (실제 실행 시에는 main.py에서 호출)

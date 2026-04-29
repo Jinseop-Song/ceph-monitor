@@ -1,0 +1,10 @@
+services:
+  ceph_monitor:
+    image: ceph-monitor:test
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./ceph_monitor_v2:/app
+    network_mode: host
+    container_name: ceph_monitor
